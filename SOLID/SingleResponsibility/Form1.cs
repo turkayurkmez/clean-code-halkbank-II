@@ -2,6 +2,12 @@ namespace SingleResponsibility
 {
     public partial class Form1 : Form
     {
+
+
+        /*
+         * SRP: Her sýnýfýn sadece bir sorumluluðu olmalý.
+         */
+
         public Form1()
         {
             InitializeComponent();
