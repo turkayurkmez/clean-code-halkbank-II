@@ -14,16 +14,19 @@ namespace CleanCode
             var companyService = new CompanyService();
             var companies = companyService.GetCompanies();
 
+            var billingService = new  BillingService();
+           
+            var payrollService = new  PayrollService();
+
             companies.ForEach(company =>
             {
-                simulateEmail(timeSheetEntries, company);
+                billingService.SimulateEmail(timeSheetEntries, company);
             });
 
+            var payRollSettings = new PayrollSettings();
+            var payment = payrollService.CalculatePayment(timeSheetEntries, payRollSettings);
 
-            var payment = calculatePayment(timeSheetEntries, 40, 15, 10);
-
-                Console.WriteLine("You will get paid $" + payment + " for your work.");
-           
+            Console.WriteLine("You will get paid $" + payment + " for your work.");          
          
             Console.WriteLine();
             Console.Write("Press any key to exit application...");
@@ -78,77 +81,10 @@ namespace CleanCode
             return timeForWork;
         }
 
-        private static void simulateEmail(List<TimeSheetEntry> timeSheetEntries, Company company)
-        {
+      
 
-            Console.WriteLine($"Simulating Sending email to {company.Name}");
-            var bill = calculateBill(timeSheetEntries, company);
-            Console.WriteLine("Your bill is $" + bill + " for the hours worked.");
+      
 
-
-        }
-
-        private static double calculateBill(List<TimeSheetEntry> timeSheetEntries, Company company)
-        {
-            var totalHours = timeSheetEntries
-                              .Where(t => containsCompanyName(t, company))
-                              .Sum(t => t.HoursWorked);
-
-            return totalHours * company.HourlyRate;
-        }
-
-        private static bool containsCompanyName(TimeSheetEntry timeSheetEntry, Company company)
-        {
-            return timeSheetEntry.WorkDone.Contains(company.Name.ToLower());
-        }
-
-        private static double calculatePayment(List<TimeSheetEntry> timeSheetEntries, int standardWorkHoursPerWeek, double overTimeHourlyRate, double standardHourlyRate)
-        {
-
-            double totalHoursForWork = timeSheetEntries.Sum(p => p.HoursWorked);
-            if (totalHoursForWork > standardWorkHoursPerWeek)
-            {
-                var overTimeHours = totalHoursForWork - standardWorkHoursPerWeek;
-                var overTimePay = overTimeHours * overTimeHourlyRate;
-                var standardPay = standardHourlyRate * standardWorkHoursPerWeek;
-
-                return overTimePay + standardPay;
-                //Console.WriteLine("You will get paid $" + (overTimePay + standardPay) + " for your work.");
-            }
-
-            return totalHoursForWork * standardHourlyRate;
        
-        }
-    }
-
-    public class TimeSheetEntry
-    {
-        public string WorkDone;
-        public double HoursWorked;
-    }
-
-    public class UserAnswers
-    {
-        public const string YES = "yes";
-        public const string NO = "no";
-    }
-
-    public class Company
-    {
-        public string Name { get; set; }
-        public double HourlyRate { get; set; }
-
-    }
-
-    public class CompanyService
-    {
-        public List<Company> GetCompanies()
-        {
-            return new List<Company>()
-            {
-                new Company{ Name ="Acme", HourlyRate = 150},
-                new Company { Name="ABC", HourlyRate=125}
-            };
-        }
     }
 }
