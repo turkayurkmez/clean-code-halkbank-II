@@ -1,12 +1,13 @@
-﻿using System;
+﻿using CleanCode.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CleanCode
+namespace CleanCode.Application
 {
-    public class BillingService
+    public class BillingService : IBillingService
     {
         public void SimulateEmail(List<TimeSheetEntry> timeSheetEntries, Company company)
         {

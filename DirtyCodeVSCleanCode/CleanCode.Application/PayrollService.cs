@@ -1,12 +1,14 @@
-﻿using System;
+﻿using CleanCode.Application.Settings;
+using CleanCode.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CleanCode
+namespace CleanCode.Application
 {
-    public class PayrollService
+    public class PayrollService : IPayrollService
     {
         public double CalculatePayment(List<TimeSheetEntry> timeSheetEntries, PayrollSettings payrollSettings)
         {

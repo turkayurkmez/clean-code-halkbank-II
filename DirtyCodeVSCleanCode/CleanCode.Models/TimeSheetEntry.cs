@@ -1,4 +1,4 @@
-﻿namespace CleanCode
+﻿namespace CleanCode.Models
 {
     public class TimeSheetEntry
     {

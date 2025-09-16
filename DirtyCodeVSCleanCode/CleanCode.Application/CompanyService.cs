@@ -1,6 +1,8 @@
-﻿namespace CleanCode
+﻿using CleanCode.Models;
+
+namespace CleanCode.Application
 {
-    public class CompanyService
+    public class CompanyService : ICompanyService
     {
         public List<Company> GetCompanies()
         {
