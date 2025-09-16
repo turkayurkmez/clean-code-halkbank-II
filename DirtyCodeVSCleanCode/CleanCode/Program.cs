@@ -1,4 +1,6 @@
-﻿namespace CleanCode
+﻿using System.Data.SqlTypes;
+
+namespace CleanCode
 {
     class Program
     {
@@ -6,16 +8,66 @@
         static void Main(string[] args)
         {
 
-            string w, rawTimeWorked;
-            int i;
-            double ttl, t;
-            List<TimeSheetEntry> ents = new List<TimeSheetEntry>();
-            Console.Write("Enter what you did: ");
-            w = Console.ReadLine();
-            Console.Write("How long did you do it for: ");
-            rawTimeWorked = Console.ReadLine();
+            var timeSheetEntries = GetTimeSheetEntriesFromUser();
 
-            while (double.TryParse(rawTimeWorked, out t) == false)
+
+            var companyService = new CompanyService();
+            var companies = companyService.GetCompanies();
+
+            companies.ForEach(company =>
+            {
+                simulateEmail(timeSheetEntries, company);
+            });
+
+
+            var payment = calculatePayment(timeSheetEntries, 40, 15, 10);
+
+                Console.WriteLine("You will get paid $" + payment + " for your work.");
+           
+         
+            Console.WriteLine();
+            Console.Write("Press any key to exit application...");
+            Console.ReadKey();
+        }
+
+        private static List<TimeSheetEntry> GetTimeSheetEntriesFromUser()
+        {
+
+            /*
+             * En az bir kere, kullanıcdan veri al. Kullanıcı "devam" derse tekrar al:
+             * 
+             */
+            List<TimeSheetEntry> timeSheetEntries = new List<TimeSheetEntry>();
+            string answer = string.Empty;
+            do
+            {
+                Console.Write("Enter what you did: ");
+                string workDescription = Console.ReadLine();
+                double timeForWork = getTimeForWork();
+
+                TimeSheetEntry timeSheetEntry = new TimeSheetEntry
+                {
+                    HoursWorked = timeForWork,
+                    WorkDone = workDescription
+                };
+                timeSheetEntries.Add(timeSheetEntry);
+                Console.Write("Do you want to enter more time (yes/no): ");
+
+                answer = Console.ReadLine();
+            }
+            while (answer.ToLower() == UserAnswers.YES);
+
+
+
+            return timeSheetEntries;
+        }
+
+        private static double getTimeForWork()
+        {
+            Console.Write("How long did you do it for: ");
+            string rawTimeWorked = Console.ReadLine();
+            double timeForWork;
+            while (!double.TryParse(rawTimeWorked, out timeForWork))
             {
                 Console.WriteLine();
                 Console.WriteLine("Invalid number given");
@@ -23,91 +75,49 @@
                 rawTimeWorked = Console.ReadLine();
             }
 
-            TimeSheetEntry ent = new TimeSheetEntry
-            {
-                HoursWorked = t,
-                WorkDone = w
-            };
-            ents.Add(ent);
-            Console.Write("Do you want to enter more time (yes/no): ");
+            return timeForWork;
+        }
 
-            string answer = Console.ReadLine();
-            bool cont = false;
+        private static void simulateEmail(List<TimeSheetEntry> timeSheetEntries, Company company)
+        {
 
-            if (answer.ToLower() == "yes")
+            Console.WriteLine($"Simulating Sending email to {company.Name}");
+            var bill = calculateBill(timeSheetEntries, company);
+            Console.WriteLine("Your bill is $" + bill + " for the hours worked.");
+
+
+        }
+
+        private static double calculateBill(List<TimeSheetEntry> timeSheetEntries, Company company)
+        {
+            var totalHours = timeSheetEntries
+                              .Where(t => containsCompanyName(t, company))
+                              .Sum(t => t.HoursWorked);
+
+            return totalHours * company.HourlyRate;
+        }
+
+        private static bool containsCompanyName(TimeSheetEntry timeSheetEntry, Company company)
+        {
+            return timeSheetEntry.WorkDone.Contains(company.Name.ToLower());
+        }
+
+        private static double calculatePayment(List<TimeSheetEntry> timeSheetEntries, int standardWorkHoursPerWeek, double overTimeHourlyRate, double standardHourlyRate)
+        {
+
+            double totalHoursForWork = timeSheetEntries.Sum(p => p.HoursWorked);
+            if (totalHoursForWork > standardWorkHoursPerWeek)
             {
-                cont = true;
+                var overTimeHours = totalHoursForWork - standardWorkHoursPerWeek;
+                var overTimePay = overTimeHours * overTimeHourlyRate;
+                var standardPay = standardHourlyRate * standardWorkHoursPerWeek;
+
+                return overTimePay + standardPay;
+                //Console.WriteLine("You will get paid $" + (overTimePay + standardPay) + " for your work.");
             }
 
-            while (cont)
-            {
-                Console.Write("Enter what you did: ");
-                w = Console.ReadLine();
-                Console.Write("How long did you do it for: ");
-                rawTimeWorked = Console.ReadLine();
-
-                while (double.TryParse(rawTimeWorked, out t) == false)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("Invalid number given");
-                    Console.Write("How long did you do it for: ");
-                    rawTimeWorked = Console.ReadLine();
-                }
-
-                ent = new TimeSheetEntry
-                {
-                    HoursWorked = t,
-                    WorkDone = w
-                };
-                ents.Add(ent);
-
-                Console.Write("Do you want to enter more time (yes/no): ");
-                answer = Console.ReadLine();
-                cont = false;
-
-                if (answer.ToLower() == "yes")
-                {
-                    cont = true;
-                }
-            }
-            ttl = 0;
-            for (i = 0; i < ents.Count; i++)
-            {
-                if (ents[i].WorkDone.ToLower().Contains("acme"))
-                {
-                    ttl += ents[i].HoursWorked;
-                }
-            }
-            Console.WriteLine("Simulating Sending email to Acme");
-            Console.WriteLine("Your bill is $" + (ttl * 150) + " for the hours worked.");
-
-            ttl = 0;
-            for (i = 0; i < ents.Count; i++)
-            {
-                if (ents[i].WorkDone.ToLower().Contains("abc"))
-                {
-                    ttl += ents[i].HoursWorked;
-                }
-            }
-            Console.WriteLine("Simulating Sending email to ABC");
-            Console.WriteLine("Your bill is $" + (ttl * 125) + " for the hours worked.");
-
-            ttl = 0;
-            for (i = 0; i < ents.Count; i++)
-            {
-                ttl += ents[i].HoursWorked;
-            }
-            if (ttl > 40)
-            {
-                Console.WriteLine("You will get paid $" + (((ttl - 40) * 15) + (40 * 10)) + " for your work.");
-            }
-            else
-            {
-                Console.WriteLine("You will get paid $" + (ttl * 10) + " for your time.");
-            }
-            Console.WriteLine();
-            Console.Write("Press any key to exit application...");
-            Console.ReadKey();
+            return totalHoursForWork * standardHourlyRate;
+       
         }
     }
 
@@ -115,5 +125,30 @@
     {
         public string WorkDone;
         public double HoursWorked;
+    }
+
+    public class UserAnswers
+    {
+        public const string YES = "yes";
+        public const string NO = "no";
+    }
+
+    public class Company
+    {
+        public string Name { get; set; }
+        public double HourlyRate { get; set; }
+
+    }
+
+    public class CompanyService
+    {
+        public List<Company> GetCompanies()
+        {
+            return new List<Company>()
+            {
+                new Company{ Name ="Acme", HourlyRate = 150},
+                new Company { Name="ABC", HourlyRate=125}
+            };
+        }
     }
 }
